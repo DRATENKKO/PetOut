@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Background circle - Beagle Brown -->
+    <path
+        android:fillColor="#C4813A"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"/>
+    <!-- Dog face - simplified Beagle silhouette -->
+    <!-- Ears -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M30,35 Q25,25 35,30 L40,40 Z"/>
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M78,35 Q83,25 73,30 L68,40 Z"/>
+    <!-- Face oval -->
+    <path
+        android:fillColor="#E8C07D"
+        android:pathData="M54,30 Q75,30 75,55 Q75,75 54,75 Q33,75 33,55 Q33,30 54,30"/>
+    <!-- Eyes -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M44,48 m-4,0 a4,4 0,1 1,8 0 a4,4 0,1 1,-8 0"/>
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M64,48 m-4,0 a4,4 0,1 1,8 0 a4,4 0,1 1,-8 0"/>
+    <!-- Nose -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M54,58 m-5,0 a5,4 0,1 1,10 0 a5,4 0,1 1,-10 0"/>
+    <!-- White blaze on face -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30 Q60,35 60,45 L54,50 L48,45 Q48,35 54,30"/>
+</vector>
