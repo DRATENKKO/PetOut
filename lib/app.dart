@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/pet_breeds.dart';
 import 'cubit/pet_cubit.dart';
 import 'cubit/timer_cubit.dart';
 import 'cubit/stats_cubit.dart';
@@ -68,17 +69,28 @@ class _PetOutAppState extends State<PetOutApp> {
           create: (context) => ThemeCubit(widget.storageService)..loadTheme(),
         ),
       ],
-      child: MaterialApp(
-        title: 'PetOut',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        home: _isInitialized
-            ? (_showOnboarding
-                  ? OnboardingScreen(onComplete: _onOnboardingComplete)
-                  : const HomeScreen())
-            : const Scaffold(body: Center(child: CircularProgressIndicator())),
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, themeState) {
+          final selectedBreedId = themeState is ThemeLoaded
+              ? themeState.selectedBreedId
+              : 'beagle';
+          final breedColors = PetBreeds.byId(selectedBreedId).colors;
+
+          return MaterialApp(
+            title: 'PetOut',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightThemeFor(breedColors),
+            darkTheme: AppTheme.darkThemeFor(breedColors),
+            themeMode: ThemeMode.system,
+            home: _isInitialized
+                ? (_showOnboarding
+                      ? OnboardingScreen(onComplete: _onOnboardingComplete)
+                      : const HomeScreen())
+                : const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  ),
+          );
+        },
       ),
     );
   }

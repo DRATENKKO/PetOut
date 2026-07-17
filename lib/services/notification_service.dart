@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
@@ -9,6 +11,9 @@ class NotificationService {
   bool _permissionsRequested = false;
 
   Future<void> init() async {
+    tzdata.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('America/Santiago'));
+
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
@@ -98,6 +103,78 @@ class NotificationService {
     );
 
     await _notifications.show(999, title, body, details);
+  }
+
+  Future<void> showTimerRunningNotification({
+    required String title,
+    required String body,
+    bool isOngoing = true,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      'petout_timer',
+      'Temporizadores',
+      channelDescription: 'Contadores activos y avisos de PetOut',
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: false,
+      enableVibration: false,
+      icon: '@mipmap/ic_launcher',
+      ongoing: true,
+      autoCancel: false,
+      onlyAlertOnce: true,
+      showWhen: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: false,
+      presentBadge: false,
+      presentSound: false,
+    );
+
+    await _notifications.show(
+      998,
+      title,
+      body,
+      const NotificationDetails(android: androidDetails, iOS: iosDetails),
+    );
+  }
+
+  Future<void> scheduleTimerEndNotification({
+    required int id,
+    required DateTime scheduledDate,
+    required String title,
+    required String body,
+  }) async {
+    if (scheduledDate.isBefore(DateTime.now())) return;
+
+    const androidDetails = AndroidNotificationDetails(
+      'petout_timer',
+      'Temporizadores',
+      channelDescription: 'Notificaciones cuando termina una actividad',
+      importance: Importance.max,
+      priority: Priority.max,
+      playSound: true,
+      enableVibration: true,
+      icon: '@mipmap/ic_launcher',
+      autoCancel: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    await _notifications.zonedSchedule(
+      id,
+      title,
+      body,
+      tz.TZDateTime.from(scheduledDate, tz.local),
+      const NotificationDetails(android: androidDetails, iOS: iosDetails),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
   }
 
   void startRepeatingNotification({

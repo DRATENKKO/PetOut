@@ -117,6 +117,8 @@ class _TimerScreenState extends State<TimerScreen>
         final totalSeconds = runningState?.totalSeconds ?? 1;
         final progress = runningState?.progress ?? 1.0;
         final isPaused = runningState?.isPaused ?? false;
+        final isInfinite = runningState?.isInfinite ?? false;
+        final elapsedSeconds = runningState?.elapsedSeconds ?? 0;
 
         return Scaffold(
           body: Stack(
@@ -136,6 +138,8 @@ class _TimerScreenState extends State<TimerScreen>
                                 totalSeconds,
                                 progress,
                                 isDark,
+                                isInfinite,
+                                elapsedSeconds,
                               ),
                       ),
                     ),
@@ -146,7 +150,7 @@ class _TimerScreenState extends State<TimerScreen>
                           children: [
                             _buildControls(context, isPaused, isDark),
                             const SizedBox(height: 16),
-                            _buildAddTimeButton(context, isDark),
+                            _buildTimerOptions(context, isDark, isInfinite),
                           ],
                         ),
                       ),
@@ -208,8 +212,9 @@ class _TimerScreenState extends State<TimerScreen>
               Navigator.of(context).pop();
             },
             style: IconButton.styleFrom(
-              backgroundColor:
-                  isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+              backgroundColor: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -241,11 +246,7 @@ class _TimerScreenState extends State<TimerScreen>
                     borderRadius: BorderRadius.circular(12),
                     gradient: _gradient,
                   ),
-                  child: Icon(
-                    _activityIcon,
-                    size: 22,
-                    color: Colors.white,
-                  ),
+                  child: Icon(_activityIcon, size: 22, color: Colors.white),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -272,9 +273,15 @@ class _TimerScreenState extends State<TimerScreen>
     int totalSeconds,
     double progress,
     bool isDark,
+    bool isInfinite,
+    int elapsedSeconds,
   ) {
-    final minutes = remainingSeconds ~/ 60;
-    final seconds = remainingSeconds % 60;
+    final secondsToShow = isInfinite ? elapsedSeconds : remainingSeconds;
+    final minutes = secondsToShow ~/ 60;
+    final seconds = secondsToShow % 60;
+    final displayedProgress = isInfinite
+        ? (elapsedSeconds % 60) / 60
+        : progress;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -282,10 +289,7 @@ class _TimerScreenState extends State<TimerScreen>
         AnimatedBuilder(
           animation: _pulseController,
           builder: (context, child) {
-            return Transform.scale(
-              scale: _pulseAnimation.value,
-              child: child,
-            );
+            return Transform.scale(scale: _pulseAnimation.value, child: child);
           },
           child: Stack(
             alignment: Alignment.center,
@@ -307,7 +311,7 @@ class _TimerScreenState extends State<TimerScreen>
               CustomPaint(
                 size: const Size(280, 280),
                 painter: _TimerPainter(
-                  progress: progress,
+                  progress: displayedProgress,
                   gradient: _gradient,
                   backgroundColor: isDark
                       ? Colors.white.withValues(alpha: 0.08)
@@ -340,14 +344,12 @@ class _TimerScreenState extends State<TimerScreen>
                           fontWeight: FontWeight.w700,
                           color: isDark ? Colors.white : AppColors.beagleBlack,
                           letterSpacing: 2,
-                          fontFeatures: const [
-                            FontFeature.tabularFigures(),
-                          ],
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Restante',
+                        isInfinite ? 'Tiempo activo' : 'Restante',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -404,43 +406,68 @@ class _TimerScreenState extends State<TimerScreen>
     );
   }
 
-  Widget _buildAddTimeButton(BuildContext context, bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        context.read<TimerCubit>().addMinutes(5);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.black.withValues(alpha: 0.05),
-          border: Border.all(
-            color: isDark ? Colors.white24 : AppColors.beagleTan.withValues(alpha: 0.5),
+  Widget _buildTimerOptions(
+    BuildContext context,
+    bool isDark,
+    bool isInfinite,
+  ) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        _TimerOptionPill(
+          icon: isInfinite
+              ? Icons.hourglass_bottom_rounded
+              : Icons.all_inclusive_rounded,
+          label: isInfinite ? 'Volver a minutos' : 'Modo infinito',
+          isDark: isDark,
+          gradient: _gradient,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            context.read<TimerCubit>().setInfiniteMode(!isInfinite);
+          },
+        ),
+        if (!isInfinite)
+          _TimerOptionPill(
+            icon: Icons.add_rounded,
+            label: '+5 min',
+            isDark: isDark,
+            gradient: _gradient,
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.read<TimerCubit>().addMinutes(5);
+            },
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.add,
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              size: 20,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '+5 minutos',
-              style: TextStyle(
-                color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
+        if (!isInfinite)
+          _TimerOptionPill(
+            icon: Icons.tune_rounded,
+            label: 'Ajustar',
+            isDark: isDark,
+            gradient: _gradient,
+            onTap: () => _showTimerDurationPicker(context),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _showTimerDurationPicker(BuildContext context) async {
+    final currentState = context.read<TimerCubit>().state;
+    if (currentState is! TimerRunning || currentState.isInfinite) return;
+
+    final currentMinutes = (currentState.totalSeconds / 60).round();
+    final result = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _TimerDurationSheet(
+        initialMinutes: currentMinutes,
+        gradient: _gradient,
       ),
     );
+
+    if (result != null && context.mounted) {
+      context.read<TimerCubit>().setDurationMinutes(result);
+    }
   }
 
   Widget _buildCompletionView(bool isDark) {
@@ -489,11 +516,7 @@ class _TimerScreenState extends State<TimerScreen>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                _activityIcon,
-                size: 24,
-                color: Colors.white,
-              ),
+              Icon(_activityIcon, size: 24, color: Colors.white),
               const SizedBox(width: 8),
               Text(
                 _activityName,
@@ -554,6 +577,169 @@ class _TimerScreenState extends State<TimerScreen>
   }
 }
 
+class _TimerOptionPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isDark;
+  final LinearGradient gradient;
+  final VoidCallback onTap;
+
+  const _TimerOptionPill({
+    required this.icon,
+    required this.label,
+    required this.isDark,
+    required this.gradient,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.10)
+              : Colors.white.withValues(alpha: 0.78),
+          border: Border.all(
+            color: gradient.colors.first.withValues(alpha: 0.28),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 19, color: gradient.colors.first),
+            const SizedBox(width: 7),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TimerDurationSheet extends StatefulWidget {
+  final int initialMinutes;
+  final LinearGradient gradient;
+
+  const _TimerDurationSheet({
+    required this.initialMinutes,
+    required this.gradient,
+  });
+
+  @override
+  State<_TimerDurationSheet> createState() => _TimerDurationSheetState();
+}
+
+class _TimerDurationSheetState extends State<_TimerDurationSheet> {
+  late double _minutes;
+
+  @override
+  void initState() {
+    super.initState();
+    _minutes = widget.initialMinutes.clamp(1, 180).toDouble();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        color: isDark ? AppColors.darkCard : Colors.white,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 42,
+              height: 4,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                color: isDark ? Colors.white24 : Colors.black12,
+              ),
+            ),
+          ),
+          const SizedBox(height: 22),
+          Text(
+            'Ajustar contador',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Elige una duración clara. Si no quieres límite, usa modo infinito desde el contador.',
+            style: TextStyle(
+              height: 1.35,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 22),
+          Center(
+            child: Text(
+              '${_minutes.round()} min',
+              style: TextStyle(
+                fontSize: 42,
+                fontWeight: FontWeight.w800,
+                color: widget.gradient.colors.first,
+              ),
+            ),
+          ),
+          Slider(
+            min: 1,
+            max: 180,
+            divisions: 179,
+            value: _minutes,
+            activeColor: widget.gradient.colors.first,
+            onChanged: (value) => setState(() => _minutes = value),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, _minutes.round()),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.gradient.colors.first,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Guardar'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TimerPainter extends CustomPainter {
   final double progress;
   final LinearGradient gradient;
@@ -589,13 +775,7 @@ class _TimerPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       final sweepAngle = 2 * math.pi * progress;
-      canvas.drawArc(
-        rect,
-        -math.pi / 2,
-        sweepAngle,
-        false,
-        gradientPaint,
-      );
+      canvas.drawArc(rect, -math.pi / 2, sweepAngle, false, gradientPaint);
 
       final glowPaint = Paint()
         ..shader = gradient.createShader(rect)
@@ -604,13 +784,7 @@ class _TimerPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
 
-      canvas.drawArc(
-        rect,
-        -math.pi / 2,
-        sweepAngle,
-        false,
-        glowPaint,
-      );
+      canvas.drawArc(rect, -math.pi / 2, sweepAngle, false, glowPaint);
     }
   }
 

@@ -92,7 +92,9 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
         slivers: [
           // App Bar
           SliverAppBar(
-            backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
+            backgroundColor: isDark
+                ? AppColors.darkBackground
+                : AppColors.background,
             elevation: 0,
             pinned: true,
             expandedHeight: 120,
@@ -111,16 +113,12 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
               IconButton(
                 onPressed: () => _showActivityPicker(context, isDark),
                 style: IconButton.styleFrom(
-                  backgroundColor:
-                      isDark ? AppColors.darkCard : Colors.white,
+                  backgroundColor: isDark ? AppColors.darkCard : Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                icon: Icon(
-                  Icons.add_a_photo,
-                  color: AppColors.beagleBrown,
-                ),
+                icon: Icon(Icons.add_a_photo, color: AppColors.beagleBrown),
               ),
               const SizedBox(width: 16),
             ],
@@ -128,9 +126,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
 
           // Empty state
           if (_photosByActivity.isEmpty && !_isLoading)
-            SliverFillRemaining(
-              child: _buildEmptyState(isDark),
-            )
+            SliverFillRemaining(child: _buildEmptyState(isDark))
           else ...[
             // Activity tabs
             SliverToBoxAdapter(
@@ -142,7 +138,11 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
                   children: [
                     _buildActivityChip('all', '📸 Todas', isDark),
                     ..._photosByActivity.keys.map(
-                      (activityId) => _buildActivityChip(activityId, '📷 $activityId', isDark),
+                      (activityId) => _buildActivityChip(
+                        activityId,
+                        '📷 $activityId',
+                        isDark,
+                      ),
                     ),
                   ],
                 ),
@@ -163,7 +163,9 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final allPhotos = _photosByActivity.values.expand((p) => p).toList();
+                    final allPhotos = _photosByActivity.values
+                        .expand((p) => p)
+                        .toList();
                     if (index >= allPhotos.length) return null;
 
                     final photo = allPhotos[index];
@@ -208,10 +210,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
               duration: const Duration(milliseconds: 600),
               curve: Curves.easeOutBack,
               builder: (context, scale, child) {
-                return Transform.scale(
-                  scale: scale,
-                  child: child,
-                );
+                return Transform.scale(scale: scale, child: child);
               },
               child: Container(
                 width: 120,
@@ -247,7 +246,9 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
                 height: 1.5,
               ),
             ),
@@ -257,7 +258,10 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.beagleBrown,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -272,13 +276,16 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
   }
 
   Widget _buildActivityChip(String activityId, String label, bool isDark) {
-    final isSelected = _selectedActivity == activityId ||
+    final isSelected =
+        _selectedActivity == activityId ||
         (_selectedActivity == null && activityId == 'all');
 
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
-        setState(() => _selectedActivity = activityId == 'all' ? null : activityId);
+        setState(
+          () => _selectedActivity = activityId == 'all' ? null : activityId,
+        );
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -344,11 +351,26 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            _buildActivityOption('walk', '🚶 Paseo', 'Foto durante el paseo', isDark),
+            _buildActivityOption(
+              'walk',
+              '🚶 Paseo',
+              'Foto durante el paseo',
+              isDark,
+            ),
             _buildActivityOption('bath', '🛁 Baño', 'Foto del baño', isDark),
-            _buildActivityOption('food', '🍖 Comida', 'Foto de la hora de comer', isDark),
+            _buildActivityOption(
+              'food',
+              '🍖 Comida',
+              'Foto de la hora de comer',
+              isDark,
+            ),
             _buildActivityOption('play', '🎾 Juego', 'Foto jugando', isDark),
-            _buildActivityOption('other', '⭐ Otro', 'Otro momento especial', isDark),
+            _buildActivityOption(
+              'other',
+              '⭐ Otro',
+              'Otro momento especial',
+              isDark,
+            ),
             const SizedBox(height: 16),
           ],
         ),
@@ -356,7 +378,12 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     );
   }
 
-  Widget _buildActivityOption(String id, String emoji, String desc, bool isDark) {
+  Widget _buildActivityOption(
+    String id,
+    String emoji,
+    String desc,
+    bool isDark,
+  ) {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
@@ -398,13 +425,15 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     );
   }
 
-  void _openPhotoViewer(BuildContext context, List<ActivityPhoto> photos, int index) {
+  void _openPhotoViewer(
+    BuildContext context,
+    List<ActivityPhoto> photos,
+    int index,
+  ) {
     Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => _PhotoViewer(
-          photos: photos,
-          initialIndex: index,
-        ),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            _PhotoViewer(photos: photos, initialIndex: index),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -476,10 +505,7 @@ class _PhotoViewer extends StatefulWidget {
   final List<ActivityPhoto> photos;
   final int initialIndex;
 
-  const _PhotoViewer({
-    required this.photos,
-    required this.initialIndex,
-  });
+  const _PhotoViewer({required this.photos, required this.initialIndex});
 
   @override
   State<_PhotoViewer> createState() => _PhotoViewerState();
@@ -504,8 +530,6 @@ class _PhotoViewerState extends State<_PhotoViewer> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -522,10 +546,7 @@ class _PhotoViewerState extends State<_PhotoViewer> {
                   child: Hero(
                     tag: 'photo_${photo.id}',
                     child: photo.imagePath.isNotEmpty
-                        ? Image.file(
-                            File(photo.imagePath),
-                            fit: BoxFit.contain,
-                          )
+                        ? Image.file(File(photo.imagePath), fit: BoxFit.contain)
                         : const Text('📷', style: TextStyle(fontSize: 100)),
                   ),
                 ),
@@ -597,7 +618,9 @@ class _PhotoViewerState extends State<_PhotoViewer> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    DateFormat('EEEE, d MMMM yyyy').format(widget.photos[_currentIndex].takenAt),
+                    DateFormat(
+                      'EEEE, d MMMM yyyy',
+                    ).format(widget.photos[_currentIndex].takenAt),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -606,20 +629,16 @@ class _PhotoViewerState extends State<_PhotoViewer> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    DateFormat('h:mm a').format(widget.photos[_currentIndex].takenAt),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    DateFormat(
+                      'h:mm a',
+                    ).format(widget.photos[_currentIndex].takenAt),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                   if (widget.photos[_currentIndex].caption != null) ...[
                     const SizedBox(height: 8),
                     Text(
                       widget.photos[_currentIndex].caption!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ],
                 ],

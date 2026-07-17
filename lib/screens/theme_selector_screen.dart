@@ -89,6 +89,9 @@ class _ThemeSelectorScreenState extends State<ThemeSelectorScreen> {
                           'pastor',
                           'bulldog',
                           'dalmata',
+                          'kiltro',
+                          'mezcla_chica',
+                          'mezcla_grande',
                         ].contains(b.id),
                       )
                       .toList(),

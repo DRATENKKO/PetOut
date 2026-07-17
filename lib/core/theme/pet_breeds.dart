@@ -54,6 +54,27 @@ class PetBreeds {
       description: 'Blanco y negro puro',
       colors: AppColorsDalmata(),
     ),
+    PetBreed(
+      id: 'kiltro',
+      name: 'Kiltro',
+      emoji: '🐾',
+      description: 'Tierra, parque y barrio',
+      colors: AppColorsJungla(),
+    ),
+    PetBreed(
+      id: 'mezcla_chica',
+      name: 'Mezcla pequeña',
+      emoji: '🐶',
+      description: 'Suave y liviano',
+      colors: AppColorsGolden(),
+    ),
+    PetBreed(
+      id: 'mezcla_grande',
+      name: 'Mezcla grande',
+      emoji: '🐕',
+      description: 'Firme y tranquilo',
+      colors: AppColorsBulldog(),
+    ),
     // 🐈 Gatos
     PetBreed(
       id: 'siames',
@@ -100,6 +121,13 @@ class PetBreeds {
       colors: AppColorsOceano(),
     ),
   ];
+
+  static PetBreed byId(String id) {
+    return allBreeds.firstWhere(
+      (breed) => breed.id == id,
+      orElse: () => allBreeds.first,
+    );
+  }
 }
 
 /// Modelo de Raza/Tema

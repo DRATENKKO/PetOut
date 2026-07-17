@@ -49,13 +49,15 @@ class _ActivityCardState extends State<ActivityCard>
       vsync: this,
     )..repeat(reverse: true);
 
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.95,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
-    _glowAnimation = Tween<double>(begin: 0.3, end: 0.6).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _glowAnimation = Tween<double>(
+      begin: 0.3,
+      end: 0.6,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -154,7 +156,9 @@ class _ActivityCardState extends State<ActivityCard>
                 gradient: _gradient,
                 boxShadow: [
                   BoxShadow(
-                    color: _gradient.colors.first.withValues(alpha: _glowAnimation.value),
+                    color: _gradient.colors.first.withValues(
+                      alpha: _glowAnimation.value,
+                    ),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -177,7 +181,9 @@ class _ActivityCardState extends State<ActivityCard>
                         gradient: _gradient,
                         boxShadow: [
                           BoxShadow(
-                            color: _gradient.colors.first.withValues(alpha: 0.4),
+                            color: _gradient.colors.first.withValues(
+                              alpha: 0.4,
+                            ),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -201,17 +207,24 @@ class _ActivityCardState extends State<ActivityCard>
                                 style: TextStyle(
                                   fontSize: widget.isCompact ? 16 : 20,
                                   fontWeight: FontWeight.w700,
-                                  color: isDark ? Colors.white : AppColors.beagleBlack,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.beagleBlack,
                                   letterSpacing: 1.2,
                                 ),
                               ),
                               if (_customDuration != _defaultDuration) ...[
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
-                                    color: _gradient.colors.first.withValues(alpha: 0.2),
+                                    color: _gradient.colors.first.withValues(
+                                      alpha: 0.2,
+                                    ),
                                   ),
                                   child: Text(
                                     'Personalizado',
@@ -227,7 +240,7 @@ class _ActivityCardState extends State<ActivityCard>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _subtitle,
+                            '$_subtitle · Mantén para ajustar',
                             style: TextStyle(
                               fontSize: widget.isCompact ? 12 : 14,
                               fontWeight: FontWeight.w500,
@@ -361,7 +374,9 @@ class _DurationPickerSheetState extends State<_DurationPickerSheet> {
                     physics: const FixedExtentScrollPhysics(),
                     onSelectedItemChanged: (index) {
                       HapticFeedback.selectionClick();
-                      setState(() => _selectedMinutes = _availableMinutes[index]);
+                      setState(
+                        () => _selectedMinutes = _availableMinutes[index],
+                      );
                     },
                     childDelegate: ListWheelChildBuilderDelegate(
                       childCount: _availableMinutes.length,
@@ -373,10 +388,14 @@ class _DurationPickerSheetState extends State<_DurationPickerSheet> {
                             '$minutes',
                             style: TextStyle(
                               fontSize: isSelected ? 36 : 24,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                               color: isSelected
                                   ? AppColors.beagleBrown
-                                  : (isDark ? Colors.white54 : AppColors.textMuted),
+                                  : (isDark
+                                        ? Colors.white54
+                                        : AppColors.textMuted),
                             ),
                           ),
                         );
@@ -389,7 +408,9 @@ class _DurationPickerSheetState extends State<_DurationPickerSheet> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
