@@ -124,6 +124,8 @@ class _StatsScreenState extends State<StatsScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildStreakCard(state.currentStreak, isDark),
+            const SizedBox(height: 16),
+            _buildCareInsight(state, isDark),
             const SizedBox(height: 24),
             Text(
               'Distribución de Actividades',
@@ -149,6 +151,108 @@ class _StatsScreenState extends State<StatsScreen>
             const SizedBox(height: 100),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCareInsight(StatsLoaded state, bool isDark) {
+    final total = state.completedActivities.length;
+    final walks = state.activityCounts[ActivityType.walk] ?? 0;
+    final baths = state.activityCounts[ActivityType.bath] ?? 0;
+    final meals = state.activityCounts[ActivityType.food] ?? 0;
+
+    String title;
+    String body;
+    IconData icon;
+    Color color;
+
+    if (total == 0) {
+      title = 'Primer registro pendiente';
+      body =
+          'Parte con una actividad simple hoy. Un paseo corto o una comida registrada ya crea historial útil.';
+      icon = Icons.flag_rounded;
+      color = AppColors.beagleBrown;
+    } else if (walks >= meals && walks >= baths) {
+      title = 'Buen ritmo de paseos';
+      body =
+          'Los paseos lideran el historial. Mantén una frecuencia estable y complementa con comidas y baño cuando toque.';
+      icon = Icons.directions_walk_rounded;
+      color = const Color(0xFF8B5A2B);
+    } else if (meals >= walks && meals >= baths) {
+      title = 'Comidas bien registradas';
+      body =
+          'Hay buen control de alimentación. Si quieres más equilibrio, suma paseos cortos para mantener energía y rutina.';
+      icon = Icons.restaurant_rounded;
+      color = const Color(0xFFB8860B);
+    } else {
+      title = 'Cuidado equilibrado';
+      body =
+          'El historial se ve ordenado. Sigue registrando sin sobrecargar: lo importante es consistencia, no perfección.';
+      icon = Icons.favorite_rounded;
+      color = const Color(0xFF4A90A4);
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        color: isDark ? AppColors.darkCard : Colors.white,
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.04),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.06),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: color.withValues(alpha: isDark ? 0.24 : 0.12),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  body,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.45,
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

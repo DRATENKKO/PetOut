@@ -137,6 +137,21 @@ void main() {
         ),
       ).thenReturn(null);
       when(() => notifications.stopRepeatingNotification()).thenReturn(null);
+      when(
+        () => notifications.showTimerRunningNotification(
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          isOngoing: any(named: 'isOngoing'),
+        ),
+      ).thenAnswer((_) async {});
+      when(
+        () => notifications.scheduleTimerEndNotification(
+          id: any(named: 'id'),
+          scheduledDate: any(named: 'scheduledDate'),
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async {});
     });
 
     blocTest<TimerCubit, TimerState>(
@@ -185,6 +200,28 @@ void main() {
       expect: () => [
         isA<TimerRunning>().having((s) => s.totalSeconds, 'totalSeconds', 60),
         isA<TimerRunning>().having((s) => s.totalSeconds, 'totalSeconds', 360),
+      ],
+    );
+
+    blocTest<TimerCubit, TimerState>(
+      'starts in infinite mode and can switch back to finite countdown',
+      build: () => TimerCubit(storage, notifications, sound),
+      act: (cubit) {
+        cubit.startTimer(
+          petId: '1',
+          type: ActivityType.walk,
+          durationMinutes: 30,
+          isInfinite: true,
+        );
+        cubit.setInfiniteMode(false);
+      },
+      expect: () => [
+        isA<TimerRunning>()
+            .having((s) => s.isInfinite, 'isInfinite', true)
+            .having((s) => s.elapsedSeconds, 'elapsedSeconds', 0),
+        isA<TimerRunning>()
+            .having((s) => s.isInfinite, 'isInfinite', false)
+            .having((s) => s.remainingSeconds, 'remainingSeconds', 1800),
       ],
     );
   });

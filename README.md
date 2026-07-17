@@ -1,215 +1,94 @@
-# 🐕 PetOut - Premium Pet Activity Timers
+# 🐾 PetOut
 
-<div align="center">
+**Rutina clara para mascotas de departamento.**
 
-![PetOut Logo](assets/images/logo.png)
+PetOut es una app Flutter pensada para dueños de mascotas que quieren ordenar paseos, baños, comidas, fotos, lugares pet friendly y pequeños logros diarios sin convertir el cuidado en una planilla fome.
 
-**La app definitiva para el cuidado de mascotas en departamentos**
+## Qué problema resuelve
 
-✨ Timers visuales premium ✨ Logros y estadísticas ✨ Mapas ✨ Adventure Mode ✨ Fotos ✨ 12 Temas ✨
+Cuando tienes una mascota en departamento, lo difícil no es solo salir a pasear: es mantener una rutina consistente, recordar qué falta, registrar hábitos y tener lugares útiles cerca. PetOut organiza eso en una experiencia visual, cálida y rápida.
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.11+-02569B?style=flat-square&logo=flutter)](https://flutter.dev)
-[![Dart](https://img.shields.io/badge/Dart-3.11+-0175C2?style=flat-square&logo=dart)](https://dart.dev)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)]()
-[![Version](https://img.shields.io/badge/Version-2.1.0-blue?style=flat-square)]()
+## Mejoras de producto aplicadas
 
-</div>
+- **Plan inteligente de hoy:** una tarjeta principal sugiere qué actividad falta según el registro diario.
+- **Resumen real:** el home ahora muestra conteos reales desde almacenamiento local, no placeholders.
+- **Explorar:** accesos rápidos a mapa pet friendly, modo aventura, galería y temas.
+- **Onboarding más claro:** comunica la propuesta de valor antes que solo listar features.
+- **UI más consistente:** cards redondeadas, sombras suaves, progreso visual, microcopy útil y acciones claras.
+- **Mejor affordance:** las actividades indican que se puede mantener presionado para ajustar duración.
 
----
+## Características actuales
 
-## 🎯 Características
+### 🧭 Rutina diaria
+- Paseos, baños y comidas con temporizador.
+- Duraciones personalizables.
+- Recomendación automática de la siguiente actividad del día.
+- Progreso diario visual `0/3`, `1/3`, `2/3`, `3/3`.
 
-### 🚶 Paseos
-- Timer visual con cuenta regresiva animada
-- Configuración de duración personalizada (5-120 min)
-- Notificaciones al completar
-- **Modo Aventura** con rutas GPS
+### 🗺️ Lugares pet friendly
+- Veterinarios.
+- Tiendas de mascotas.
+- Parques.
+- Peluquerías caninas.
+- Veterinarios 24 horas.
 
-### 🛁 Baño
-- Timer con gradientes azules relajantes
-- Sonidos de notificación personalizados
-- Registro automático de actividades
+### 🎒 Modo aventura
+- Rutas predefinidas en Viña del Mar.
+- Distancias y tiempos estimados.
+- Logros y celebración.
 
-### 🍖 Comida
-- Recordatorios de alimentación
-- Historial de comidas
-- Estadísticas semanales
+### 📸 Galería
+- Captura de momentos por actividad.
+- Organización local.
+- Base para antes/después de paseos, baños o hitos.
 
-### 🗺️ Mapa de Veterinarios
-- Veterinarios más cercanos con ubicación GPS
-- Tiendas de mascotas
-- Parques para paseo
-- Peluquerías caninas
-- Veterinarios 24 horas
-- Filtros por tipo y acciones rápidas
-
-### 🎬 Modo Aventura
-- Rutas predefinidas por la ciudad
-- Tracking de camino en tiempo real
-- Badges desbloqueables por completar rutas
-- Celebración con confetti
-- 4 rutas iniciales en Viña del Mar
-
-### 📸 Galería de Fotos
-- Fotos antes/después de cada actividad
-- Captura directa desde la app
-- Visor full screen con zoom
-- Organización por tipo de actividad
-
-### 🎨 12 Temas Visuales
-| Raza | Paleta | Descripción |
-|------|--------|-------------|
-| 🐕 Beagle | Café/Dorado | El clásico original |
-| 🐺 Husky | Azul/Blanco | Ártico y fresco |
-| 🦮 Golden | Dorado | Cálido y acogedor |
-| 🐕‍🦺 Pastor | Negro/Fuego | Elegante y fuerte |
-| 🐶 Bulldog | Gris | Sofisticado |
-| 🐩 Dálmata | Blanco/Negro | Minimalista |
-| 🐱 Siamés | Azul/Crema | Exótico |
-| 😺 Persa | Rosa | Suave y dulce |
-| 🦄 Arcoíris | Vibrante | Divertido |
-| 🌙 Nocturn | Púrpura | Dark mode + |
-| 🌿 Jungla | Verde | Natural |
-| 🌊 Océano | Azul agua | Fresco |
-
-### 🎖️ Sistema de Logros
-- **9 logros únicos** para desbloquear
-- Animaciones con confetti al completar
-- Progreso guardado automáticamente
+### 🎨 Temas
+- Temas por razas y estilos visuales.
+- Perros, gatos y estilos especiales.
 
 ### 📊 Estadísticas
-- Gráficos de actividad con fl_chart
-- Historial por mascota
-- Rachas de actividad
+- Conteos por actividad.
+- Rachas.
+- Logros.
+- Historial.
 
----
-
-## 🛠️ Tech Stack
+## Stack
 
 | Tecnología | Uso |
-|------------|-----|
-| Flutter 3.11+ | Framework principal |
-| flutter_bloc | Estado con BLoC pattern |
-| google_fonts | Tipografía Poppins |
-| fl_chart | Gráficos de estadísticas |
-| flutter_map | Mapas interactivos |
-| latlong2 | Coordenadas GPS |
-| image_picker | Captura de fotos |
-| confetti | Animaciones de celebración |
-| flutter_local_notifications | Notificaciones push |
-| audioplayers | Sonidos de actividad |
+|---|---|
+| Flutter | App móvil multiplataforma |
+| Dart | Lenguaje principal |
+| flutter_bloc | Estado |
 | shared_preferences | Persistencia local |
+| flutter_map | Mapas |
+| fl_chart | Estadísticas |
+| image_picker | Galería/fotos |
+| confetti | Celebraciones |
+| flutter_local_notifications | Notificaciones |
+| audioplayers | Sonidos |
 
----
-
-## 📦 Instalación
+## Instalación
 
 ```bash
-# Clonar el repositorio
-git clone https://github.com/tu-usuario/PetOut.git
-cd PetOut
-
-# Instalar dependencias
 flutter pub get
-
-# Ejecutar en desarrollo
 flutter run
+```
 
-# Build release
+Build Android:
+
+```bash
 flutter build apk --release
-flutter build appbundle --release
 ```
 
-### 📍 Configuración de Mapas
+## Próximas mejoras recomendadas
 
-Para que los mapas funcionen correctamente, necesitas:
+- Guardar planes por horario: mañana/tarde/noche.
+- Recordatorios configurables por mascota.
+- Perfil de salud: vacunas, peso, alergias, veterinario.
+- Exportar historial para veterinario.
+- Sincronización opcional en la nube.
+- Diseño adaptativo para tablets.
 
-1. **Android** - Agregar en `android/app/src/main/AndroidManifest.xml`:
-```xml
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-<uses-permission android:name="android.permission.INTERNET" />
-```
+## Estado
 
-2. **iOS** - Agregar en `ios/Runner/Info.plist`:
-```xml
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>PetOut necesita tu ubicación para mostrar veterinarios cercanos</string>
-<key>NSPhotoLibraryUsageDescription</key>
-<string>PetOut necesita acceso a tus fotos para guardar momentos con tu mascota</string>
-```
-
----
-
-## 🎨 Sistema de Diseño
-
-### Colores
-
-| Color | Hex | Uso |
-|-------|-----|-----|
-| Beagle Brown | `#C4813A` | Color primario |
-| Beagle Tan | `#E8C07D` | Color secundario |
-| Beagle Cream | `#F5EBE0` | Fondo modo claro |
-| Dark BG | `#0A0A0B` | Fondo modo oscuro |
-
-### Tipografía
-- **Poppins** (Google Fonts)
-- Pesos: 400, 500, 600, 700
-
----
-
-## 📱 Screenshots
-
-> _(Agregar screenshots en /assets/screenshots/)_
-
----
-
-## 🗺️ Rutas de Aventura
-
-Las rutas iniciales están basadas en **Viña del Mar, Chile**:
-
-1. **Playa Acapulco Run** - 1.5 km
-   - 🏖️🌊
-   - Paseo por la costanera
-
-2. **Cerro Castillo Trek** - 2.3 km
-   - 🏔️🎯
-   - Vistas panorámicas
-
-3. **Parque Alejo Loyola** - 2.0 km
-   - 🌳🎪
-   - Zona de juegos
-
-4. **Sector 21 - Mirador** - 1.0 km
-   - 👀🏆
-   - Ruta corta pero intensa
-
----
-
-## 🤝 Contribuir
-
-1. Fork el repositorio
-2. Crea una rama (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit tus cambios (`git commit -m 'feat: nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
-
----
-
-## 📄 Licencia
-
-MIT License - ver archivo [LICENSE](LICENSE) para más detalles.
-
----
-
-## 👨‍💻 Autor
-
-**Tu Nombre** - [tu-email@ejemplo.com](mailto:tu-email@ejemplo.com)
-
----
-
-<div align="center">
-
-Hecho con ❤️ y 🐕 usando Flutter
-
-</div>
+Versión mejorada localmente con foco en producto + UI. Falta correr `flutter analyze/test/build` en una máquina con Flutter instalado, porque este entorno WSL no tiene el binario `flutter` disponible.

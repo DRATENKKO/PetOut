@@ -19,6 +19,8 @@ class TimerRunning extends TimerState {
   final int remainingSeconds;
   final int totalSeconds;
   final bool isPaused;
+  final bool isInfinite;
+  final int elapsedSeconds;
   final DateTime? scheduledEndTime;
 
   TimerRunning({
@@ -26,13 +28,33 @@ class TimerRunning extends TimerState {
     required this.remainingSeconds,
     required this.totalSeconds,
     this.isPaused = false,
+    this.isInfinite = false,
+    this.elapsedSeconds = 0,
     this.scheduledEndTime,
   });
 
-  double get progress => 1 - (remainingSeconds / totalSeconds);
+  double get progress {
+    if (isInfinite || totalSeconds <= 0) return 0;
+    return 1 - (remainingSeconds / totalSeconds);
+  }
+
+  String get displayTime {
+    final secondsToShow = isInfinite ? elapsedSeconds : remainingSeconds;
+    final minutes = secondsToShow ~/ 60;
+    final seconds = secondsToShow % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
 
   @override
-  List<Object?> get props => [activity, remainingSeconds, totalSeconds, isPaused, scheduledEndTime];
+  List<Object?> get props => [
+    activity,
+    remainingSeconds,
+    totalSeconds,
+    isPaused,
+    isInfinite,
+    elapsedSeconds,
+    scheduledEndTime,
+  ];
 }
 
 class TimerCompleted extends TimerState {
@@ -50,16 +72,31 @@ class TimerCubit extends Cubit<TimerState> {
   final SoundService _soundService;
   final Uuid _uuid = const Uuid();
   Timer? _timer;
+  int? _scheduledEndNotificationId;
 
-  TimerCubit(this._storageService, this._notificationService, this._soundService) : super(TimerInitial());
+  TimerCubit(
+    this._storageService,
+    this._notificationService,
+    this._soundService,
+  ) : super(TimerInitial());
 
   void startTimer({
     required String petId,
     required ActivityType type,
     required int durationMinutes,
     DateTime? scheduledEndTime,
+    bool isInfinite = false,
   }) {
     _timer?.cancel();
+    if (_scheduledEndNotificationId != null) {
+      _notificationService.cancelNotification(_scheduledEndNotificationId!);
+      _scheduledEndNotificationId = null;
+    }
+    try {
+      unawaited(_notificationService.requestPermissions());
+    } catch (_) {
+      // Tests/mocks may not implement permission prompts; timer still works.
+    }
 
     final activity = Activity(
       id: _uuid.v4(),
@@ -70,13 +107,43 @@ class TimerCubit extends Cubit<TimerState> {
     );
 
     final totalSeconds = durationMinutes * 60;
+    final endTime =
+        scheduledEndTime ??
+        (isInfinite
+            ? null
+            : DateTime.now().add(Duration(seconds: totalSeconds)));
 
-    emit(TimerRunning(
-      activity: activity,
-      remainingSeconds: totalSeconds,
-      totalSeconds: totalSeconds,
-      scheduledEndTime: scheduledEndTime,
-    ));
+    emit(
+      TimerRunning(
+        activity: activity,
+        remainingSeconds: isInfinite ? 0 : totalSeconds,
+        totalSeconds: totalSeconds,
+        isInfinite: isInfinite,
+        elapsedSeconds: 0,
+        scheduledEndTime: endTime,
+      ),
+    );
+
+    _notificationService.showTimerRunningNotification(
+      title: isInfinite
+          ? 'PetOut activo: ${activity.name}'
+          : 'PetOut contando: ${activity.name}',
+      body: isInfinite
+          ? 'Contador infinito activo. Puedes volver a PetOut cuando quieras.'
+          : 'Termina aproximadamente a las ${_formatTime(endTime!)}. Te avisaremos si sales de la app.',
+      isOngoing: true,
+    );
+
+    if (!isInfinite && endTime != null) {
+      _scheduledEndNotificationId = activity.id.hashCode & 0x7fffffff;
+      _notificationService.scheduleTimerEndNotification(
+        id: _scheduledEndNotificationId!,
+        scheduledDate: endTime,
+        title: '⏰ ${activity.name} listo',
+        body:
+            'Tu contador terminó. Abre PetOut para registrarlo y revisar la rutina.',
+      );
+    }
 
     _startCountdown();
   }
@@ -88,17 +155,42 @@ class TimerCubit extends Cubit<TimerState> {
 
         if (currentState.isPaused) return;
 
-        if (currentState.remainingSeconds <= 1) {
+        if (currentState.isInfinite) {
+          emit(
+            TimerRunning(
+              activity: currentState.activity,
+              remainingSeconds: 0,
+              totalSeconds: currentState.totalSeconds,
+              isPaused: currentState.isPaused,
+              isInfinite: true,
+              elapsedSeconds: currentState.elapsedSeconds + 1,
+              scheduledEndTime: currentState.scheduledEndTime,
+            ),
+          );
+          return;
+        }
+
+        final remaining = currentState.scheduledEndTime != null
+            ? currentState.scheduledEndTime!
+                  .difference(DateTime.now())
+                  .inSeconds
+            : currentState.remainingSeconds - 1;
+
+        if (remaining <= 0) {
           _timer?.cancel();
           _completeTimer(currentState.activity);
         } else {
-          emit(TimerRunning(
-            activity: currentState.activity,
-            remainingSeconds: currentState.remainingSeconds - 1,
-            totalSeconds: currentState.totalSeconds,
-            isPaused: currentState.isPaused,
-            scheduledEndTime: currentState.scheduledEndTime,
-          ));
+          emit(
+            TimerRunning(
+              activity: currentState.activity,
+              remainingSeconds: remaining,
+              totalSeconds: currentState.totalSeconds,
+              isPaused: currentState.isPaused,
+              isInfinite: false,
+              elapsedSeconds: currentState.elapsedSeconds,
+              scheduledEndTime: currentState.scheduledEndTime,
+            ),
+          );
         }
       }
     });
@@ -107,40 +199,150 @@ class TimerCubit extends Cubit<TimerState> {
   void pauseTimer() {
     if (state is TimerRunning) {
       final currentState = state as TimerRunning;
-      emit(TimerRunning(
-        activity: currentState.activity,
-        remainingSeconds: currentState.remainingSeconds,
-        totalSeconds: currentState.totalSeconds,
-        isPaused: true,
-        scheduledEndTime: currentState.scheduledEndTime,
-      ));
+      emit(
+        TimerRunning(
+          activity: currentState.activity,
+          remainingSeconds: currentState.remainingSeconds,
+          totalSeconds: currentState.totalSeconds,
+          isPaused: true,
+          isInfinite: currentState.isInfinite,
+          elapsedSeconds: currentState.elapsedSeconds,
+          scheduledEndTime: currentState.scheduledEndTime,
+        ),
+      );
     }
   }
 
   void resumeTimer() {
     if (state is TimerRunning) {
       final currentState = state as TimerRunning;
-      emit(TimerRunning(
-        activity: currentState.activity,
-        remainingSeconds: currentState.remainingSeconds,
-        totalSeconds: currentState.totalSeconds,
-        isPaused: false,
-        scheduledEndTime: currentState.scheduledEndTime,
-      ));
+      emit(
+        TimerRunning(
+          activity: currentState.activity,
+          remainingSeconds: currentState.remainingSeconds,
+          totalSeconds: currentState.totalSeconds,
+          isPaused: false,
+          isInfinite: currentState.isInfinite,
+          elapsedSeconds: currentState.elapsedSeconds,
+          scheduledEndTime: currentState.scheduledEndTime,
+        ),
+      );
     }
   }
 
   void addMinutes(int minutes) {
     if (state is TimerRunning) {
       final currentState = state as TimerRunning;
-      emit(TimerRunning(
-        activity: currentState.activity,
-        remainingSeconds: currentState.remainingSeconds + (minutes * 60),
-        totalSeconds: currentState.totalSeconds + (minutes * 60),
-        isPaused: currentState.isPaused,
-        scheduledEndTime: currentState.scheduledEndTime,
-      ));
+      emit(
+        TimerRunning(
+          activity: currentState.activity,
+          remainingSeconds: currentState.remainingSeconds + (minutes * 60),
+          totalSeconds: currentState.totalSeconds + (minutes * 60),
+          isPaused: currentState.isPaused,
+          isInfinite: currentState.isInfinite,
+          elapsedSeconds: currentState.elapsedSeconds,
+          scheduledEndTime: currentState.isInfinite
+              ? currentState.scheduledEndTime
+              : currentState.scheduledEndTime?.add(Duration(minutes: minutes)),
+        ),
+      );
     }
+  }
+
+  void setDurationMinutes(int minutes) {
+    if (state is! TimerRunning) return;
+    final currentState = state as TimerRunning;
+    if (currentState.isInfinite) return;
+
+    final safeMinutes = minutes.clamp(1, 180);
+    final totalSeconds = safeMinutes * 60;
+    final endTime = DateTime.now().add(Duration(seconds: totalSeconds));
+
+    if (_scheduledEndNotificationId != null) {
+      _notificationService.cancelNotification(_scheduledEndNotificationId!);
+    }
+    _scheduledEndNotificationId =
+        currentState.activity.id.hashCode & 0x7fffffff;
+
+    emit(
+      TimerRunning(
+        activity: currentState.activity.copyWith(durationMinutes: safeMinutes),
+        remainingSeconds: totalSeconds,
+        totalSeconds: totalSeconds,
+        isPaused: currentState.isPaused,
+        isInfinite: false,
+        elapsedSeconds: 0,
+        scheduledEndTime: endTime,
+      ),
+    );
+
+    _notificationService.showTimerRunningNotification(
+      title: 'PetOut contando: ${currentState.activity.name}',
+      body: 'Nuevo tiempo: $safeMinutes min. Te avisaremos al terminar.',
+      isOngoing: true,
+    );
+
+    _notificationService.scheduleTimerEndNotification(
+      id: _scheduledEndNotificationId!,
+      scheduledDate: endTime,
+      title: '⏰ ${currentState.activity.name} listo',
+      body:
+          'Tu contador terminó. Abre PetOut para registrarlo y revisar la rutina.',
+    );
+  }
+
+  void setInfiniteMode(bool enabled) {
+    if (state is! TimerRunning) return;
+    final currentState = state as TimerRunning;
+
+    final endTime = enabled
+        ? null
+        : DateTime.now().add(Duration(seconds: currentState.totalSeconds));
+
+    if (_scheduledEndNotificationId != null) {
+      _notificationService.cancelNotification(_scheduledEndNotificationId!);
+      _scheduledEndNotificationId = null;
+    }
+
+    emit(
+      TimerRunning(
+        activity: currentState.activity,
+        remainingSeconds: enabled ? 0 : currentState.totalSeconds,
+        totalSeconds: currentState.totalSeconds,
+        isPaused: currentState.isPaused,
+        isInfinite: enabled,
+        elapsedSeconds: enabled ? currentState.elapsedSeconds : 0,
+        scheduledEndTime: endTime,
+      ),
+    );
+
+    _notificationService.showTimerRunningNotification(
+      title: enabled
+          ? 'PetOut activo: ${currentState.activity.name}'
+          : 'PetOut contando: ${currentState.activity.name}',
+      body: enabled
+          ? 'Contador infinito activo. No terminará hasta que tú lo pares.'
+          : 'Vuelve cuando quieras. Te avisaremos al terminar.',
+      isOngoing: true,
+    );
+
+    if (!enabled && endTime != null) {
+      _scheduledEndNotificationId =
+          currentState.activity.id.hashCode & 0x7fffffff;
+      _notificationService.scheduleTimerEndNotification(
+        id: _scheduledEndNotificationId!,
+        scheduledDate: endTime,
+        title: '⏰ ${currentState.activity.name} listo',
+        body:
+            'Tu contador terminó. Abre PetOut para registrarlo y revisar la rutina.',
+      );
+    }
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
   Future<void> _completeTimer(Activity activity) async {
@@ -149,6 +351,13 @@ class TimerCubit extends Cubit<TimerState> {
     await _storageService.updateStreak();
 
     await _checkAchievements(completedActivity);
+    await _notificationService.cancelNotification(998);
+    if (_scheduledEndNotificationId != null) {
+      await _notificationService.cancelNotification(
+        _scheduledEndNotificationId!,
+      );
+      _scheduledEndNotificationId = null;
+    }
 
     _soundService.startBarkingRepeat(intervalSeconds: 4);
 
@@ -168,12 +377,20 @@ class TimerCubit extends Cubit<TimerState> {
   }
 
   Future<void> _checkAchievements(Activity activity) async {
-    final activities = await _storageService.getActivitiesForPet(activity.petId);
+    final activities = await _storageService.getActivitiesForPet(
+      activity.petId,
+    );
     final completedActivities = activities.where((a) => a.completed).toList();
 
-    final walks = completedActivities.where((a) => a.type == ActivityType.walk).length;
-    final baths = completedActivities.where((a) => a.type == ActivityType.bath).length;
-    final meals = completedActivities.where((a) => a.type == ActivityType.food).length;
+    final walks = completedActivities
+        .where((a) => a.type == ActivityType.walk)
+        .length;
+    final baths = completedActivities
+        .where((a) => a.type == ActivityType.bath)
+        .length;
+    final meals = completedActivities
+        .where((a) => a.type == ActivityType.food)
+        .length;
 
     if (walks >= 1) await _storageService.unlockAchievement('first_walk');
     if (baths >= 1) await _storageService.unlockAchievement('first_bath');
@@ -191,6 +408,11 @@ class TimerCubit extends Cubit<TimerState> {
   void resetTimer() {
     _soundService.stopBarking();
     _notificationService.stopRepeatingNotification();
+    _notificationService.cancelNotification(998);
+    if (_scheduledEndNotificationId != null) {
+      _notificationService.cancelNotification(_scheduledEndNotificationId!);
+      _scheduledEndNotificationId = null;
+    }
     _timer?.cancel();
     emit(TimerInitial());
   }

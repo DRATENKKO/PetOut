@@ -18,48 +18,13 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen>
-    with TickerProviderStateMixin {
+class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-
-  late AnimationController _slideController;
-  late AnimationController _scaleController;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.4),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
-
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeOutBack),
-    );
-
-    _slideController.forward();
-    _scaleController.forward();
-  }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _slideController.dispose();
-    _scaleController.dispose();
     super.dispose();
   }
 
@@ -142,8 +107,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           color: isActive
                               ? null
                               : (isDark
-                                  ? Colors.white24
-                                  : AppColors.beagleTan.withValues(alpha: 0.4)),
+                                    ? Colors.white24
+                                    : AppColors.beagleTan.withValues(
+                                        alpha: 0.4,
+                                      )),
                         ),
                       );
                     }),
@@ -162,7 +129,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           borderRadius: BorderRadius.circular(18),
                         ),
                         elevation: 8,
-                        shadowColor: AppColors.beagleBrown.withValues(alpha: 0.4),
+                        shadowColor: AppColors.beagleBrown.withValues(
+                          alpha: 0.4,
+                        ),
                       ),
                       child: Text(
                         _currentPage == 2 ? '¡Empezar!' : 'Siguiente',
@@ -184,31 +153,31 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   List<Widget> get slides => [
-        _OnboardingSlide(
-          emoji: '🐕',
-          gradient: AppColors.avatarGradient,
-          title: '¡Bienvenido a PetOut!',
-          description:
-              'La app definitiva para el cuidado de tu mascota en departamentos',
-          icon: Icons.pets,
-        ),
-        _OnboardingSlide(
-          emoji: '⏱️',
-          gradient: AppColors.bathGradient,
-          title: 'Temporizadores Visuales',
-          description:
-              'Configura timers para paseos, baños y comidas con notificaciones',
-          icon: Icons.timer_outlined,
-        ),
-        _OnboardingSlide(
-          emoji: '🏆',
-          gradient: AppColors.foodGradient,
-          title: 'Manten a tu Mascota Feliz',
-          description:
-              'Registra actividades, desbloquea logros y comparte tu progreso',
-          icon: Icons.emoji_events_outlined,
-        ),
-      ];
+    _OnboardingSlide(
+      emoji: '🐾',
+      gradient: AppColors.avatarGradient,
+      title: 'Rutina clara para tu mascota',
+      description:
+          'PetOut ordena paseos, baños y comidas para que cuidar a tu peludo sea simple, visual y constante.',
+      icon: Icons.pets,
+    ),
+    _OnboardingSlide(
+      emoji: '🧭',
+      gradient: AppColors.bathGradient,
+      title: 'Plan diario inteligente',
+      description:
+          'La app te sugiere qué falta hoy, muestra el progreso y deja timers listos para iniciar al toque.',
+      icon: Icons.auto_awesome_outlined,
+    ),
+    _OnboardingSlide(
+      emoji: '🏆',
+      gradient: AppColors.foodGradient,
+      title: 'Recuerdos, rutas y logros',
+      description:
+          'Guarda fotos, revisa estadísticas, explora lugares pet friendly y convierte la rutina en una aventura.',
+      icon: Icons.emoji_events_outlined,
+    ),
+  ];
 }
 
 /// ═══════════════════════════════════════════════════════
@@ -244,10 +213,7 @@ class _OnboardingSlide extends StatelessWidget {
             duration: const Duration(milliseconds: 600),
             curve: Curves.easeOutBack,
             builder: (context, scale, child) {
-              return Transform.scale(
-                scale: scale,
-                child: child,
-              );
+              return Transform.scale(scale: scale, child: child);
             },
             child: Container(
               width: 160,
@@ -281,10 +247,7 @@ class _OnboardingSlide extends StatelessWidget {
                     ),
                   ),
                   // Emoji
-                  Text(
-                    emoji,
-                    style: const TextStyle(fontSize: 70),
-                  ),
+                  Text(emoji, style: const TextStyle(fontSize: 70)),
                 ],
               ),
             ),
@@ -321,7 +284,9 @@ class _OnboardingSlide extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
-              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.textSecondary,
               height: 1.6,
             ),
           ),

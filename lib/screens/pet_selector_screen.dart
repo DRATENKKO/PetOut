@@ -718,13 +718,3 @@ class _PetSelectorScreenState extends State<PetSelectorScreen> {
     );
   }
 }
-
-extension on LinearGradient {
-  LinearGradient scale(double factor) {
-    return LinearGradient(
-      colors: colors.map((c) => c.withValues(alpha: c.a * factor)).toList(),
-      begin: begin,
-      end: end,
-    );
-  }
-}

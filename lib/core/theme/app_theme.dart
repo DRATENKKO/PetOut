@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
+import 'pet_breeds.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
@@ -88,9 +89,7 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         color: AppColors.cardBackground,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -136,9 +135,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
         ),
-        iconTheme: const IconThemeData(
-          color: AppColors.textPrimary,
-        ),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.cardBackground,
@@ -174,7 +171,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         hintStyle: GoogleFonts.poppins(
           color: AppColors.textMuted,
           fontSize: 14,
@@ -185,10 +185,7 @@ class AppTheme {
         thickness: 1,
         space: 1,
       ),
-      iconTheme: const IconThemeData(
-        color: AppColors.textPrimary,
-        size: 24,
-      ),
+      iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 24),
     );
   }
 
@@ -206,80 +203,79 @@ class AppTheme {
         onSecondary: Colors.white,
         onSurface: AppColors.darkTextPrimary,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).copyWith(
-        displayLarge: GoogleFonts.poppins(
-          fontSize: 57,
-          fontWeight: FontWeight.w700,
-          color: AppColors.darkTextPrimary,
-          letterSpacing: -1.5,
-        ),
-        displayMedium: GoogleFonts.poppins(
-          fontSize: 45,
-          fontWeight: FontWeight.w700,
-          color: AppColors.darkTextPrimary,
-          letterSpacing: -0.5,
-        ),
-        displaySmall: GoogleFonts.poppins(
-          fontSize: 36,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
-        ),
-        headlineLarge: GoogleFonts.poppins(
-          fontSize: 32,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
-        ),
-        headlineMedium: GoogleFonts.poppins(
-          fontSize: 28,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
-        ),
-        headlineSmall: GoogleFonts.poppins(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
-        ),
-        titleLarge: GoogleFonts.poppins(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
-        ),
-        titleMedium: GoogleFonts.poppins(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
-        ),
-        titleSmall: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
-        ),
-        bodyLarge: GoogleFonts.poppins(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          color: AppColors.darkTextPrimary,
-        ),
-        bodyMedium: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: AppColors.darkTextSecondary,
-        ),
-        bodySmall: GoogleFonts.poppins(
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          color: AppColors.darkTextSecondary,
-        ),
-        labelLarge: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
-        ),
-      ),
+      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme)
+          .copyWith(
+            displayLarge: GoogleFonts.poppins(
+              fontSize: 57,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkTextPrimary,
+              letterSpacing: -1.5,
+            ),
+            displayMedium: GoogleFonts.poppins(
+              fontSize: 45,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkTextPrimary,
+              letterSpacing: -0.5,
+            ),
+            displaySmall: GoogleFonts.poppins(
+              fontSize: 36,
+              fontWeight: FontWeight.w600,
+              color: AppColors.darkTextPrimary,
+            ),
+            headlineLarge: GoogleFonts.poppins(
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
+              color: AppColors.darkTextPrimary,
+            ),
+            headlineMedium: GoogleFonts.poppins(
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
+              color: AppColors.darkTextPrimary,
+            ),
+            headlineSmall: GoogleFonts.poppins(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: AppColors.darkTextPrimary,
+            ),
+            titleLarge: GoogleFonts.poppins(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: AppColors.darkTextPrimary,
+            ),
+            titleMedium: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.darkTextPrimary,
+            ),
+            titleSmall: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.darkTextPrimary,
+            ),
+            bodyLarge: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: AppColors.darkTextPrimary,
+            ),
+            bodyMedium: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: AppColors.darkTextSecondary,
+            ),
+            bodySmall: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: AppColors.darkTextSecondary,
+            ),
+            labelLarge: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.darkTextPrimary,
+            ),
+          ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         color: AppColors.darkCard,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -325,9 +321,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: AppColors.darkTextPrimary,
         ),
-        iconTheme: const IconThemeData(
-          color: AppColors.darkTextPrimary,
-        ),
+        iconTheme: const IconThemeData(color: AppColors.darkTextPrimary),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.darkCard,
@@ -363,7 +357,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         hintStyle: GoogleFonts.poppins(
           color: AppColors.darkTextSecondary,
           fontSize: 14,
@@ -377,6 +374,54 @@ class AppTheme {
       iconTheme: const IconThemeData(
         color: AppColors.darkTextPrimary,
         size: 24,
+      ),
+    );
+  }
+
+  static ThemeData lightThemeFor(AppBreedColors colors) {
+    final base = lightTheme;
+    return base.copyWith(
+      primaryColor: colors.primary,
+      scaffoldBackgroundColor: colors.background,
+      colorScheme: base.colorScheme.copyWith(
+        primary: colors.primary,
+        secondary: colors.secondary,
+        surface: colors.cardBackground,
+      ),
+      floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
+        backgroundColor: colors.primary,
+      ),
+      bottomNavigationBarTheme: base.bottomNavigationBarTheme.copyWith(
+        selectedItemColor: colors.primary,
+        backgroundColor: colors.cardBackground,
+      ),
+      sliderTheme: base.sliderTheme.copyWith(
+        activeTrackColor: colors.primary,
+        thumbColor: colors.primary,
+      ),
+    );
+  }
+
+  static ThemeData darkThemeFor(AppBreedColors colors) {
+    final base = darkTheme;
+    return base.copyWith(
+      primaryColor: colors.primaryLight,
+      scaffoldBackgroundColor: colors.darkBackground,
+      colorScheme: base.colorScheme.copyWith(
+        primary: colors.primaryLight,
+        secondary: colors.secondary,
+        surface: colors.darkCard,
+      ),
+      floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
+        backgroundColor: colors.primary,
+      ),
+      bottomNavigationBarTheme: base.bottomNavigationBarTheme.copyWith(
+        selectedItemColor: colors.primaryLight,
+        backgroundColor: colors.darkCard,
+      ),
+      sliderTheme: base.sliderTheme.copyWith(
+        activeTrackColor: colors.primaryLight,
+        thumbColor: colors.primaryLight,
       ),
     );
   }

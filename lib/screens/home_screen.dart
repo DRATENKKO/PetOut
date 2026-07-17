@@ -8,11 +8,14 @@ import '../cubit/timer_cubit.dart';
 import '../cubit/stats_cubit.dart';
 import '../models/pet.dart';
 import '../models/activity.dart';
-import '../widgets/pet_avatar.dart';
 import '../widgets/activity_card.dart';
+import '../widgets/care_insight_card.dart';
 import 'timer_screen.dart';
 import 'stats_screen.dart';
-import 'pet_selector_screen.dart';
+import 'map_screen.dart';
+import 'adventure_map_screen.dart';
+import 'photo_gallery_screen.dart';
+import 'theme_selector_screen.dart';
 
 /// ═══════════════════════════════════════════════════════
 /// 🏠 HomeScreen - Pantalla Principal Premium
@@ -115,6 +118,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case ActivityType.food:
         return 5;
     }
+  }
+
+  Future<void> _markActivityDone(ActivityType type, Pet pet) async {
+    final storage = context.read<PetCubit>().storage;
+    final duration = _customDurations[type] ?? _defaultDurationFor(type);
+
+    final activity = Activity(
+      id: 'manual_${DateTime.now().microsecondsSinceEpoch}',
+      petId: pet.id,
+      type: type,
+      startTime: DateTime.now(),
+      durationMinutes: duration,
+      completed: true,
+    );
+
+    await storage.addActivity(activity);
+    await storage.updateStreak();
+    if (!mounted) return;
+
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${activity.name.toLowerCase()} registrado para ${pet.name} · $duration min',
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   void _navigateToTimer(ActivityType type, Pet pet) {
@@ -230,6 +262,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 isDark,
                                 state,
                               ),
+                              const SizedBox(height: 24),
+                              _buildCareCoachSection(isDark, selectedPet),
+                              const SizedBox(height: 24),
+                              _buildTodayMomentumSection(isDark, selectedPet),
+                              const SizedBox(height: 24),
+                              _buildExploreSection(isDark, selectedPet),
                               const SizedBox(height: 32),
                               _buildActivitiesSection(isDark, selectedPet),
                               const SizedBox(height: 24),
@@ -517,6 +555,262 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  Future<_CareSnapshot> _loadCareSnapshot(String petId) async {
+    final storage = context.read<PetCubit>().storage;
+    final todayActivities = await storage.getActivitiesForToday(petId);
+    final allActivities = await storage.getActivitiesForPet(petId);
+    final streak = await storage.getCurrentStreak();
+
+    int todayCount(ActivityType type) => todayActivities
+        .where((activity) => activity.type == type && activity.completed)
+        .length;
+    int totalCount(ActivityType type) => allActivities
+        .where((activity) => activity.type == type && activity.completed)
+        .length;
+
+    final walkToday = todayCount(ActivityType.walk);
+    final bathToday = todayCount(ActivityType.bath);
+    final foodToday = todayCount(ActivityType.food);
+
+    ActivityType suggested = ActivityType.walk;
+    if (foodToday == 0) {
+      suggested = ActivityType.food;
+    } else if (walkToday == 0) {
+      suggested = ActivityType.walk;
+    } else if (bathToday == 0) {
+      suggested = ActivityType.bath;
+    }
+
+    final todayMinutes = todayActivities.fold<int>(
+      0,
+      (total, activity) => total + activity.durationMinutes,
+    );
+
+    return _CareSnapshot(
+      walkToday: walkToday,
+      bathToday: bathToday,
+      foodToday: foodToday,
+      walkTotal: totalCount(ActivityType.walk),
+      bathTotal: totalCount(ActivityType.bath),
+      foodTotal: totalCount(ActivityType.food),
+      todayMinutes: todayMinutes,
+      streak: streak,
+      suggestedActivity: suggested,
+    );
+  }
+
+  Widget _buildCareCoachSection(bool isDark, Pet selectedPet) {
+    return FutureBuilder<_CareSnapshot>(
+      future: _loadCareSnapshot(selectedPet.id),
+      builder: (context, snapshot) {
+        final data = snapshot.data;
+        if (data == null) {
+          return Container(
+            height: 180,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              color: isDark ? AppColors.darkCard : Colors.white,
+            ),
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.beagleBrown,
+                ),
+              ),
+            ),
+          );
+        }
+
+        return CareInsightCard(
+          pet: selectedPet,
+          walkCount: data.walkToday,
+          bathCount: data.bathToday,
+          foodCount: data.foodToday,
+          suggestedActivity: data.suggestedActivity,
+          isDark: isDark,
+          onStartSuggested: () =>
+              _navigateToTimer(data.suggestedActivity, selectedPet),
+          onMarkDone: () =>
+              _markActivityDone(data.suggestedActivity, selectedPet),
+        );
+      },
+    );
+  }
+
+  Widget _buildTodayMomentumSection(bool isDark, Pet selectedPet) {
+    return FutureBuilder<_CareSnapshot>(
+      future: _loadCareSnapshot(selectedPet.id),
+      builder: (context, snapshot) {
+        final data = snapshot.data;
+        final completed = data == null
+            ? 0
+            : [
+                data.walkToday > 0,
+                data.bathToday > 0,
+                data.foodToday > 0,
+              ].where((done) => done).length;
+        final minutes = data?.todayMinutes ?? 0;
+        final streak = data?.streak ?? 0;
+        final message = switch (completed) {
+          0 =>
+            'Parte chico: registra comida o un paseo corto y ya queda encaminado.',
+          1 =>
+            'Buen inicio. Una acción más y la rutina se siente mucho más ordenada.',
+          2 => 'Casi listo el día. Solo falta una actividad para cerrar 3/3.',
+          _ =>
+            'Día redondo para ${selectedPet.name}. Mantén el ritmo sin sobrepensarlo.',
+        };
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: isDark ? AppColors.darkCard : Colors.white,
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.04),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.06),
+                blurRadius: 18,
+                offset: const Offset(0, 9),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: AppColors.beagleBrown.withValues(
+                    alpha: isDark ? 0.22 : 0.12,
+                  ),
+                ),
+                child: Icon(
+                  Icons.auto_graph_rounded,
+                  color: AppColors.beagleBrown,
+                  size: 25,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hoy: $completed/3 · ${minutes}min · racha $streak',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      message,
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.35,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildExploreSection(bool isDark, Pet selectedPet) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 4,
+              height: 24,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(2),
+                gradient: AppColors.avatarGradient,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Explorar',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.22,
+          children: [
+            _QuickActionTile(
+              title: 'Mapa pet friendly',
+              subtitle: 'Vet, parques y tiendas',
+              icon: Icons.map_rounded,
+              color: const Color(0xFF2E7D5A),
+              isDark: isDark,
+              onTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const MapScreen())),
+            ),
+            _QuickActionTile(
+              title: 'Aventura',
+              subtitle: 'Rutas y logros',
+              icon: Icons.explore_rounded,
+              color: const Color(0xFF8B5A2B),
+              isDark: isDark,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AdventureMapScreen()),
+              ),
+            ),
+            _QuickActionTile(
+              title: 'Galería',
+              subtitle: 'Momentos de ${selectedPet.name}',
+              icon: Icons.photo_library_rounded,
+              color: const Color(0xFF4A90A4),
+              isDark: isDark,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PhotoGalleryScreen()),
+              ),
+            ),
+            _QuickActionTile(
+              title: 'Temas',
+              subtitle: 'Razas y estilos',
+              icon: Icons.palette_rounded,
+              color: const Color(0xFFB8860B),
+              isDark: isDark,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ThemeSelectorScreen()),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   // ─────────────────────────────────────────────────────
   // 🎬 Activities Section
   // ─────────────────────────────────────────────────────
@@ -574,94 +868,97 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // 📊 Quick Stats Section
   // ─────────────────────────────────────────────────────
   Widget _buildQuickStats(bool isDark, Pet selectedPet) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Section header
-        Row(
+    return FutureBuilder<_CareSnapshot>(
+      future: _loadCareSnapshot(selectedPet.id),
+      builder: (context, snapshot) {
+        final data = snapshot.data;
+        final walkTotal = data?.walkTotal ?? 0;
+        final bathTotal = data?.bathTotal ?? 0;
+        final foodTotal = data?.foodTotal ?? 0;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 4,
-              height: 24,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(2),
-                gradient: AppColors.avatarGradient,
-              ),
+            Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    gradient: AppColors.avatarGradient,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Resumen real',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Text(
-              'Resumen',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : AppColors.textPrimary,
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: () => _navigateToStats(context, selectedPet),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  color: isDark ? AppColors.darkCard : Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatItem(
+                      emoji: '🚶',
+                      label: 'Paseos',
+                      value: '$walkTotal',
+                      color: const Color(0xFF8B5A2B),
+                      isDark: isDark,
+                    ),
+                    _buildDivider(isDark),
+                    _buildStatItem(
+                      emoji: '🛁',
+                      label: 'Baños',
+                      value: '$bathTotal',
+                      color: const Color(0xFF4A90A4),
+                      isDark: isDark,
+                    ),
+                    _buildDivider(isDark),
+                    _buildStatItem(
+                      emoji: '🍖',
+                      label: 'Comidas',
+                      value: '$foodTotal',
+                      color: const Color(0xFFB8860B),
+                      isDark: isDark,
+                    ),
+                    _buildDivider(isDark),
+                    _buildStatItem(
+                      emoji: '📊',
+                      label: 'Stats',
+                      value: '',
+                      color: AppColors.beagleBrown,
+                      isDark: isDark,
+                      showArrow: true,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 16),
-        // Stats cards row
-        GestureDetector(
-          onTap: () => _navigateToStats(context, selectedPet),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              color: isDark ? AppColors.darkCard : Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem(
-                  emoji: '🚶',
-                  label: 'Paseos',
-                  value: '${_getStatCount(selectedPet.id, ActivityType.walk)}',
-                  color: const Color(0xFF8B5A2B),
-                  isDark: isDark,
-                ),
-                _buildDivider(isDark),
-                _buildStatItem(
-                  emoji: '🛁',
-                  label: 'Baños',
-                  value: '${_getStatCount(selectedPet.id, ActivityType.bath)}',
-                  color: const Color(0xFF4A90A4),
-                  isDark: isDark,
-                ),
-                _buildDivider(isDark),
-                _buildStatItem(
-                  emoji: '🍖',
-                  label: 'Comidas',
-                  value: '${_getStatCount(selectedPet.id, ActivityType.food)}',
-                  color: const Color(0xFFB8860B),
-                  isDark: isDark,
-                ),
-                _buildDivider(isDark),
-                _buildStatItem(
-                  emoji: '📊',
-                  label: 'Stats',
-                  value: '',
-                  color: AppColors.beagleBrown,
-                  isDark: isDark,
-                  showArrow: true,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+        );
+      },
     );
-  }
-
-  int _getStatCount(String petId, ActivityType type) {
-    // This would normally come from StatsCubit, simplified for now
-    return 0;
   }
 
   Widget _buildStatItem({
@@ -940,6 +1237,124 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CareSnapshot {
+  final int walkToday;
+  final int bathToday;
+  final int foodToday;
+  final int walkTotal;
+  final int bathTotal;
+  final int foodTotal;
+  final int todayMinutes;
+  final int streak;
+  final ActivityType suggestedActivity;
+
+  const _CareSnapshot({
+    required this.walkToday,
+    required this.bathToday,
+    required this.foodToday,
+    required this.walkTotal,
+    required this.bathTotal,
+    required this.foodTotal,
+    required this.todayMinutes,
+    required this.streak,
+    required this.suggestedActivity,
+  });
+}
+
+class _QuickActionTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _QuickActionTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(24),
+        child: Ink(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: isDark ? AppColors.darkCard : Colors.white,
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.04),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.06),
+                blurRadius: 18,
+                offset: const Offset(0, 9),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: color.withValues(alpha: isDark ? 0.22 : 0.12),
+                ),
+                child: Icon(icon, color: color, size: 23),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
